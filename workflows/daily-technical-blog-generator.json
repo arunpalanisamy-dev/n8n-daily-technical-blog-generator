@@ -200,7 +200,7 @@
     },
     {
       "parameters": {
-        "sendTo": "rajiarunas787@gmail.com",
+        "sendTo": "add you own email address here",
         "subject": "=[Review] {{ $json.category }}: {{ $json.title }}",
         "message": "={{ $json.html }}",
         "options": {
