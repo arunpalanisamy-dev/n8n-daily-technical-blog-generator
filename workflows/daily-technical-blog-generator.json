@@ -1,0 +1,395 @@
+{
+  "name": "Daily Technical Article Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "id": "f767cb72-2a08-4b5e-aed4-fe3572d37652",
+      "name": "Every Day at 7 AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "article_history"
+        },
+        "returnAll": true
+      },
+      "id": "748a1f7a-d5b3-4926-b9bf-b0531902c394",
+      "name": "Get Past Articles",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        112
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "category",
+              "type": "string",
+              "value": "={{ [\"Python\",\"SQL\",\"AI Agents\",\"Generative AI\",\"Machine Learning\",\"Retrieval-Augmented Generation (RAG)\",\"MLOps\",\"Data Engineering\",\"Deep Learning\",\"n8n Automation\"][$(\"Get Past Articles\").all().filter(i => i.json.title).length % 10] }}"
+            },
+            {
+              "id": "a2",
+              "name": "date",
+              "type": "string",
+              "value": "={{ $now.toFormat(\"yyyy-MM-dd\") }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "82021ded-2392-4d39-83f3-232913eb6dfa",
+      "name": "Pick Category",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        112
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Category for today: {{ $(\"Pick Category\").first().json.category }}\n\nChoose one specific, practical topic within this category. Do NOT repeat or closely overlap any of these previously covered topics/titles: {{ $(\"Get Past Articles\").all().filter(i => i.json.category === $(\"Pick Category\").first().json.category).map(i => i.json.title).filter(Boolean).join(\" | \") || \"none yet\" }}\n\nWrite the complete article now in the required output format.",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an experienced Senior Software Engineer, Data Scientist, AI Engineer and technical educator. You research, plan, write and quality-check one high-quality technical blog article per day for software developers, data scientists, ML engineers, AI engineers and technology professionals.\n\nOBJECTIVE\nWrite one original, detailed, technically accurate, publication-ready article that explains a real technical concept or engineering problem, gives practical implementation guidance with logically correct code, explains architecture, design decisions and trade-offs, shows real-world applications, and is suitable for Medium after human review.\n\nARTICLE REQUIREMENTS\n- Length: 1,000-1,500 words. Intermediate to advanced level. Professional, practical, natural human-like writing.\n- Avoid generic AI-sounding introductions and repetitive conclusions. Use meaningful headings and subheadings. Explain terminology when needed.\n- Structure where appropriate: Title; Introduction (problem, why it matters, what the reader learns); Understanding the Concept (fundamentals, internals, terminology); Architecture or Technical Workflow (explain the flow with a numbered list or a short text diagram inside a code block; do NOT use Mermaid because Medium cannot render it); Practical Implementation (complete code, dependencies, setup, step-by-step explanation); Real-World Applications; Common Mistakes and Challenges; Best Practices; Conclusion; References.\n\nTECHNICAL ACCURACY RULES (MANDATORY)\n- Never invent benchmarks, performance metrics, research findings or statistics.\n- Never fabricate URLs, documentation, research papers or citations. Only cite official documentation or well-known sources you are confident exist, and prefer top-level documentation URLs. If reliable references are unavailable, say so.\n- Do not claim code has been executed or tested. Record that the code was not executed in the QUALITY REVIEW section, never inside the article body.\n- Clearly distinguish verified facts from recommendations or assumptions.\n- Check API names, library versions, parameters and syntax for consistency. Explain version-specific behaviour. Include security, scalability and reliability considerations where applicable.\n- Do not copy existing articles. Produce original explanations.\n\nCODE REQUIREMENTS\nReadable, maintainable code following language conventions, with necessary imports, error handling where appropriate, no deprecated APIs unless discussing migration, expected output where useful, and focus on the article objective. No pseudocode unless explicitly labelled.\n\nMEDIUM OPTIMISATION\nCompelling but technically honest title, strong opening paragraph, short paragraphs, Markdown headings, code blocks with language identifiers, few or no emojis, no keyword stuffing, exactly 5 relevant Medium tags, useful independently of the author's background.\n\nFINAL QUALITY REVIEW\nBefore answering, review technical correctness, depth, code quality, structure, originality, usefulness, reference quality, readability, repetition and unsupported claims. Revise the article if you find an issue.\n\nFORMATTING RULES (STRICT)\n- The article body must be paste-ready for Medium. Sections appear in this exact order, each with a ## heading: Introduction, Understanding the Concept, Architecture or Technical Workflow, Practical Implementation, Real-World Applications, Common Mistakes and Challenges, Best Practices, Conclusion, References. Use ### subheadings inside a section where helpful. You may give the headings more specific names but keep the order.\n- NEVER hard-wrap text. Write each paragraph as one single unbroken line. Put exactly one blank line between paragraphs, headings, lists and code blocks.\n- Code goes in fenced code blocks with a language identifier. Never break a line of code across two lines unless the language requires it. Keep code lines short by writing compact code, not by wrapping.\n- Use - for bullet lists and 1. for numbered lists, one item per line. In References use one bullet per source with the name and the URL.\n- Do not use tables, HTML tags or Mermaid.\n\nOUTPUT FORMAT\nReturn the final response exactly in this format:\n\n---\n# ARTICLE METADATA\n\n**Title:** (article title)\n\n**Category:** (selected category)\n\n**Topic:** (specific topic)\n\n**Difficulty:** Intermediate or Advanced\n\n**Estimated Reading Time:** (estimate)\n\n**Tags:** tag1, tag2, tag3, tag4, tag5\n\n**Quality Status:** READY_FOR_REVIEW or NEEDS_MANUAL_REVIEW\n\n---\n\n# ARTICLE\n\n(complete Markdown article. It starts directly with the first ## section heading, without the title. It is pasted into Medium unchanged, so it must contain no editor notes, review comments, placeholders or disclaimers about generation.)\n\n---\n\n# QUALITY REVIEW\n\n- Technical accuracy: PASS or REVIEW\n- Code quality: PASS or REVIEW\n- Structure: PASS or REVIEW\n- Originality: PASS or REVIEW\n- References: PASS or REVIEW\n\n**Known limitations or items requiring verification:**\n(list issues; write None identified only if appropriate)\n\n---\n\n# EDITORIAL NOTES\n\n(briefly explain the intended audience, key learning outcomes and suggested improvements before publication)\n\nGenerate one complete, original article. Do not return an outline. Do not skip implementation details. Do not fabricate research or claim external verification that did not occur."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "1053003b-70d7-4d2d-99bb-08e0bf7c0e66",
+      "name": "Write Article",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        672,
+        112
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "claude-sonnet-5-5"
+        },
+        "options": {
+          "maxTokensToSample": 16000
+        }
+      },
+      "id": "44babc6b-c7ae-4d51-aae6-45269407d497",
+      "name": "Anthropic Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        336
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "id": null,
+          "name": "Gateway credits",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1",
+              "name": "title",
+              "type": "string",
+              "value": "={{ ($json.text.match(/\\*\\*Title:\\*\\*\\s*(.+)/) || [])[1] || \"Untitled article\" }}"
+            },
+            {
+              "id": "b2",
+              "name": "topic",
+              "type": "string",
+              "value": "={{ ($json.text.match(/\\*\\*Topic:\\*\\*\\s*(.+)/) || [])[1] || \"\" }}"
+            },
+            {
+              "id": "b3",
+              "name": "category",
+              "type": "string",
+              "value": "={{ $(\"Pick Category\").first().json.category }}"
+            },
+            {
+              "id": "b4",
+              "name": "date",
+              "type": "string",
+              "value": "={{ $(\"Pick Category\").first().json.date }}"
+            },
+            {
+              "id": "b5",
+              "name": "article",
+              "type": "string",
+              "value": "={{ ($json.text.split(/#\\s*ARTICLE\\s*\\n/)[1] || $json.text).split(/\\n-{3,}\\s*\\n+#\\s*QUALITY REVIEW/)[0].trim() }}"
+            },
+            {
+              "id": "b6",
+              "name": "metadata",
+              "type": "string",
+              "value": "={{ $json.text.split(/#\\s*ARTICLE\\s*\\n/)[0].replace(/^\\s*-{3,}\\s*/, \"\").replace(/^#\\s*ARTICLE METADATA\\s*/, \"\").replace(/\\n-{3,}\\s*$/, \"\").trim() }}"
+            },
+            {
+              "id": "b7",
+              "name": "review",
+              "type": "string",
+              "value": "={{ ($json.text.split(/#\\s*QUALITY REVIEW/)[1] || \"\").trim() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e53f52f9-d7ee-40ab-bfa1-71dd5060c6fb",
+      "name": "Extract Metadata",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "markdownToHtml",
+        "markdown": "=# {{ $json.title }}\n\n{{ $json.article }}\n\n---\n\n## Review notes (not part of the article, do not paste into Medium)\n\n{{ $json.metadata }}\n\n{{ $json.review }}",
+        "destinationKey": "html",
+        "options": {
+          "strikethrough": true,
+          "tables": true
+        }
+      },
+      "id": "fdc06197-5e29-4993-bff9-f00ffbd7ce0f",
+      "name": "Convert to HTML",
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "rajiarunas787@gmail.com",
+        "subject": "=[Review] {{ $json.category }}: {{ $json.title }}",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "451ae7e9-5a2f-4ed2-a298-ffbc6122878f",
+      "name": "Email Article for Review",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1472,
+        112
+      ],
+      "webhookId": "787569f0-b83f-40fe-a783-0375301a281c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "LgnIT7oX2vtN4SES",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "article_history"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "category": "={{ $(\"Extract Metadata\").first().json.category }}",
+            "title": "={{ $(\"Extract Metadata\").first().json.title }}",
+            "topic": "={{ $(\"Extract Metadata\").first().json.topic }}",
+            "published_date": "={{ $(\"Extract Metadata\").first().json.date }}"
+          },
+          "schema": [
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "published_date",
+              "displayName": "published_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1bb284fd-aea4-4f92-8cbd-87b70e0834cb",
+      "name": "Save to History",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1696,
+        112
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every Day at 7 AM": {
+      "main": [
+        [
+          {
+            "node": "Get Past Articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Past Articles": {
+      "main": [
+        [
+          {
+            "node": "Pick Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick Category": {
+      "main": [
+        [
+          {
+            "node": "Write Article",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Article": {
+      "main": [
+        [
+          {
+            "node": "Extract Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Write Article",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Metadata": {
+      "main": [
+        [
+          {
+            "node": "Convert to HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to HTML": {
+      "main": [
+        [
+          {
+            "node": "Email Article for Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Article for Review": {
+      "main": [
+        [
+          {
+            "node": "Save to History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "aca0ea07-aca9-4671-9bbd-e8a07cd0774c",
+  "meta": {
+    "instanceId": "5819a933fbf14fbf05a6564221bfbed977110b1ace0f97c003648d9353bb3d7e"
+  },
+  "nodeGroups": [],
+  "id": "N7HNYnkdpo3qQWgU",
+  "tags": []
+}
